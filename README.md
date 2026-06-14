@@ -1,4 +1,4 @@
-# Telegram Panel
+# iceice Management Tool
 
 [English](README.md) | [中文](README.zh-CN.md)
 
@@ -21,17 +21,49 @@ A multi-account Telegram management panel built on **WTelegramClient**, powered 
 
 ## Overview
 
-Telegram Panel is designed for operating and managing multiple Telegram accounts from a single web interface. It focuses on account lifecycle management, batch operations, channel/group administration, automation workflows, and extensibility.
+**iceice Management Tool** is designed for operating and managing multiple Telegram accounts from a single web interface. It focuses on account lifecycle management, batch operations, channel/group administration, automation tasks, and modular extensions.
+
+Now with a new **Verification Code and 2FA Sharing Module**, you can create independent verification code viewing links for customers with support for custom SMS API configuration, HTML announcements, contact information, and long-term stable operations.
 
 ## Feature Highlights
 
 - 📥 **Multi-account import and login**: import/export Telethon and TData archives, sign in with SMS verification codes, and handle 2FA passwords
-- 👥 **Batch operations for account fleets**: bulk join / subscribe / leave / start bots, auto-send messages in private groups for account warming, bulk invite members or bots, batch assign administrators, export links, and more
+- 👥 **Batch operations for account fleets**: bulk join / subscribe / leave / start bots, auto-send messages in private groups for account warming, bulk invite members or bots, batch assign admins, export links, etc.
 - 📱 **Kick other devices with one click**: keep the current panel session while removing other active sessions
 - 🧹 **Invalid account detection and cleanup**: batch-handle banned, limited, frozen, logged-out, or expired-session accounts
 - 🔐 **2FA management**: change secondary passwords individually or in bulk, and bind / replace recovery email addresses (including support for Cloud Mail verification flows)
 - 👤 **Better account visibility**: quickly inspect joined channels and groups from the account list, and display estimated registration time based on the 777000 system notification history
 - 🧩 **Modular architecture**: install extensions for tasks, APIs, and UI modules (see `docs/developer/modules.md`)
+- ✨ **NEW: Verification Code and 2FA Sharing**: Create independent share links for customers to view verification codes and 2FA information with customizable configuration and long-term stable operations
+
+## New Feature: Verification Code and 2FA Sharing Module
+
+### Features
+
+- 🔗 **Independent Share Links**: Generate unique share URLs for each customer, no login required for viewing
+- ⚙️ **Custom SMS API Configuration**: Integrate third-party SMS receiving APIs for automated code receiving
+- 📢 **Customizable HTML Announcements**: Add custom HTML announcements and important notices
+- 📞 **Flexible Contact Information**: Support email, phone, Telegram, WeChat, QQ, website, and other contact methods
+- 🔒 **Secure and Stable**: Data encryption storage, support for enabling/disabling share links
+- 📊 **View Statistics**: Record verification code viewing status and expiration time
+
+### Usage Example
+
+1. **Create Share Link**
+   - Go to `Admin Panel > Verification Share Management`
+   - Click `Create Share Link`
+   - Configure API, announcements, contact information
+   - Generate unique share URL
+
+2. **Share with Customers**
+   ```
+   https://yourdomain.com/verification-share/abc123def456
+   ```
+
+3. **Customers View Codes**
+   - Open the share link
+   - View verification codes and 2FA information
+   - Click "Mark as Viewed" to update status
 
 ## Recent Additions
 
@@ -42,7 +74,7 @@ Telegram Panel is designed for operating and managing multiple Telegram accounts
 - 🕒 **Scheduled task capability**: timed channel and group tasks such as creation and publishing
 - 🧠 **Task center upgrades**: pause, edit, and rerun continuous tasks; separate running tasks from history; support auto-cleanup
 - 💬 **Continuous activity improvements**: account categories, randomized copywriting, second-level send intervals, and persistent run configuration
-- 🔄 **Sync experience optimization**: manual “sync now” runs in the background and can be tracked in the task center
+- 🔄 **Sync experience optimization**: manual "sync now" runs in the background and can be tracked in the task center
 - 👤 **Account list enhancement**: estimated registration time display and joined channel/group inspection
 - 📺 **Channel management upgrade**: channel lists now focus on joined channels, with multi-condition filters and linked-account visibility
 - 👥 **Group management completion**: group creation, categorization, batch operations, and listing support
@@ -56,6 +88,7 @@ Telegram Panel is designed for operating and managing multiple Telegram accounts
 
 - [x] One-click leave / unsubscribe / subscribe for channels and groups
 - [x] Batch auto check-in
+- [x] Verification code and 2FA sharing module
 - [ ] One-click clear contacts
 - [ ] Batch re-login with SMS verification codes (for refreshing sessions)
 - [ ] Phone registration flow for unregistered numbers (name / optional email / email code, etc.)
@@ -76,7 +109,7 @@ Requirements: Docker. On Windows, Docker Desktop + WSL2 is recommended. On Linux
 #### 1. Prepare the project
 
 ```bash
-git clone https://github.com/moeacgx/Telegram-Panel
+git clone https://github.com/iceiceABCD/Telegram-Panel
 cd Telegram-Panel
 cp .env.example .env
 ```

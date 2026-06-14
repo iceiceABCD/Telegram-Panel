@@ -1,0 +1,147 @@
+@page "/admin/verification-shares"
+@using TelegramPanel.Web.ExternalApi
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient Http
+@inject ILogger<VerificationShareManagement> Logger
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h3>验证码分享管理</h3>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary" @onclick="ShowCreateDialog">
+                <i class="bi bi-plus-circle"></i> 创建分享链接
+            </button>
+        </div>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">加载中...</span>
+        </div>
+    }
+    else if (ShareConfigs?.Count > 0)
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>分享名称</th>
+                        <th>分享ID</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var config in ShareConfigs)
+                    {
+                        <tr>
+                            <td>@config.Name</td>
+                            <td>
+                                <code>@config.ShareId</code>
+                                <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="() => CopyShareLink(config.ShareId)" title="复制分享链接">
+                                    <i class="bi bi-files"></i>
+                                </button>
+                            </td>
+                            <td>
+                                @if (config.IsEnabled)
+                                {
+                                    <span class="badge bg-success">已启用</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">已禁用</span>
+                                }
+                            </td>
+                            <td>@config.CreatedAt:yyyy-MM-dd HH:mm</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" @onclick="() => EditConfig(config)">
+                                    编辑
+                                </button>
+                                <button class="btn btn-sm btn-info" @onclick="() => ViewShareLink(config.ShareId)">
+                                    查看
+                                </button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteConfig(config.Id)">
+                                    删除
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            暂无分享链接，<a href="#" @onclick="ShowCreateDialog">立即创建</a>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ShareConfigDto>? ShareConfigs { get; set; }
+    private bool IsLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadShareConfigs();
+    }
+
+    private async Task LoadShareConfigs()
+    {
+        try
+        {
+            IsLoading = true;
+            // TODO: 从 API 加载分享配置列表
+            ShareConfigs = new List<ShareConfigDto>();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading share configs");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void ShowCreateDialog()
+    {
+        // TODO: 显示创建对话框
+    }
+
+    private void EditConfig(ShareConfigDto config)
+    {
+        // TODO: 编辑配置
+    }
+
+    private void ViewShareLink(string shareId)
+    {
+        // TODO: 打开分享链接预览
+    }
+
+    private async Task DeleteConfig(int configId)
+    {
+        // TODO: 删除配置
+        await LoadShareConfigs();
+    }
+
+    private async Task CopyShareLink(string shareId)
+    {
+        // TODO: 复制分享链接到剪贴板
+        try
+        {
+            var shareUrl = $"{Http.BaseAddress}verification-share/{shareId}";
+            // 使用 JS 复制到剪贴板
+            Logger.LogInformation($"Share link: {shareUrl}");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error copying share link");
+        }
+    }
+}

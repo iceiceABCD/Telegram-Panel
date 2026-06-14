@@ -1,0 +1,250 @@
+@page "/verification-share/{ShareId}"
+@using TelegramPanel.Web.ExternalApi
+@using System.Text.Json
+@inject HttpClient Http
+@inject ILogger<VerificationShare> Logger
+
+<div class="verification-share-container">
+    @if (IsLoading)
+    {
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">加载中...</span>
+        </div>
+    }
+    else if (Config != null)
+    {
+        <!-- 公告部分 -->
+        @if (!string.IsNullOrEmpty(Config.HtmlAnnouncement))
+        {
+            <div class="alert alert-info announcement-section">
+                @((MarkupString)Config.HtmlAnnouncement)
+            </div>
+        }
+
+        <!-- 验证码表格 -->
+        <div class="codes-section">
+            <h4>验证码和 2FA 信息</h4>
+            
+            @if (VerificationCodes?.Count > 0)
+            {
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>电话号码</th>
+                            <th>验证码类型</th>
+                            <th>验证码</th>
+                            <th>过期时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var code in VerificationCodes)
+                        {
+                            <tr>
+                                <td>@MaskPhoneNumber(code.PhoneNumber)</td>
+                                <td>@code.CodeType</td>
+                                <td>
+                                    <code class="verification-code">@code.VerificationCode</code>
+                                </td>
+                                <td>@code.ExpiredAt:yyyy-MM-dd HH:mm:ss</td>
+                                <td>
+                                    @if (!code.IsViewed)
+                                    {
+                                        <button class="btn btn-sm btn-primary" @onclick="() => MarkAsViewed(code.Id)">
+                                            标记已查看
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">已查看</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-secondary">
+                    暂无验证码记录
+                </div>
+            }
+        </div>
+
+        <!-- 联系方式 -->
+        @if (ContactInfo != null)
+        {
+            <div class="contact-section mt-4">
+                <h5>联系方式</h5>
+                <div class="contact-info">
+                    @if (!string.IsNullOrEmpty(ContactInfo.Email))
+                    {
+                        <p><strong>邮箱：</strong> <a href="mailto:@ContactInfo.Email">@ContactInfo.Email</a></p>
+                    }
+                    @if (!string.IsNullOrEmpty(ContactInfo.Phone))
+                    {
+                        <p><strong>电话：</strong> @ContactInfo.Phone</p>
+                    }
+                    @if (!string.IsNullOrEmpty(ContactInfo.Telegram))
+                    {
+                        <p><strong>Telegram：</strong> <a href="https://t.me/@ContactInfo.Telegram" target="_blank">@ContactInfo.Telegram</a></p>
+                    }
+                    @if (!string.IsNullOrEmpty(ContactInfo.Wechat))
+                    {
+                        <p><strong>微信：</strong> @ContactInfo.Wechat</p>
+                    }
+                    @if (!string.IsNullOrEmpty(ContactInfo.QQ))
+                    {
+                        <p><strong>QQ：</strong> @ContactInfo.QQ</p>
+                    }
+                    @if (!string.IsNullOrEmpty(ContactInfo.Website))
+                    {
+                        <p><strong>网站：</strong> <a href="@ContactInfo.Website" target="_blank">@ContactInfo.Website</a></p>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else if (!IsLoading)
+    {
+        <div class="alert alert-danger">
+            分享链接不存在或已过期
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string ShareId { get; set; } = string.Empty;
+
+    private ShareConfigDto? Config { get; set; }
+    private List<VerificationCodeDto>? VerificationCodes { get; set; }
+    private ContactInfoDto? ContactInfo { get; set; }
+    private bool IsLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 获取分享配置
+            var response = await Http.GetAsync($"/api/public/verification/share/{ShareId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<VerificationShareResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                Config = result?.Data;
+
+                // 解析联系信息
+                if (Config?.ContactInfo != null)
+                {
+                    var contactJson = JsonSerializer.Serialize(Config.ContactInfo);
+                    ContactInfo = JsonSerializer.Deserialize<ContactInfoDto>(contactJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+            }
+
+            // 获取验证码列表
+            var codesResponse = await Http.GetAsync($"/api/public/verification/share/{ShareId}/codes");
+            if (codesResponse.IsSuccessStatusCode)
+            {
+                var json = await codesResponse.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<VerificationCodesResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                VerificationCodes = result?.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading verification share data");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task MarkAsViewed(int codeId)
+    {
+        try
+        {
+            var response = await Http.PostAsync($"/api/public/verification/codes/{codeId}/view", null);
+            if (response.IsSuccessStatusCode && VerificationCodes != null)
+            {
+                var code = VerificationCodes.FirstOrDefault(c => c.Id == codeId);
+                if (code != null)
+                {
+                    code.IsViewed = true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error marking code as viewed");
+        }
+    }
+
+    private string MaskPhoneNumber(string phoneNumber)
+    {
+        if (string.IsNullOrEmpty(phoneNumber) || phoneNumber.Length < 7)
+            return phoneNumber;
+        
+        return phoneNumber.Substring(0, 3) + "****" + phoneNumber.Substring(phoneNumber.Length - 3);
+    }
+}
+
+<style>
+    .verification-share-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .announcement-section {
+        margin-bottom: 20px;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .codes-section {
+        margin: 30px 0;
+    }
+
+    .verification-code {
+        background-color: #f8f9fa;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 1.1em;
+        color: #d63031;
+        font-weight: bold;
+    }
+
+    .contact-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #28a745;
+    }
+
+    .contact-info p {
+        margin-bottom: 10px;
+    }
+
+    .contact-info a {
+        color: #0d6efd;
+        text-decoration: none;
+    }
+
+    .contact-info a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+public class ContactInfoDto
+{
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public string? Telegram { get; set; }
+    public string? Wechat { get; set; }
+    public string? QQ { get; set; }
+    public string? Website { get; set; }
+    public string? CustomField { get; set; }
+}
