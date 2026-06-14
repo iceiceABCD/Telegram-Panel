@@ -15,9 +15,9 @@ RUN printf '{\n  "name": "telegram-panel-tdata-runtime",\n  "private": true,\n  
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_URLS=http+:5001
 ENV TELEGRAM_PANEL_TDATA_RUNTIME_DIR=/app/tdata-runtime
-EXPOSE 5000
+EXPOSE 5001
 
 # 持久化目录：/data（通过 docker-compose 挂载）
 # - 数据库：/data/telegram-panel.db
@@ -38,4 +38,3 @@ RUN chmod +x /entrypoint.sh
 RUN node -v && npm -v
 
 ENTRYPOINT ["/entrypoint.sh"]
-
