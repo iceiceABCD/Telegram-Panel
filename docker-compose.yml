@@ -5,11 +5,11 @@ services:
     container_name: telegram-panel
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "5001:5001"
     volumes:
       - ./docker-data:/data
     environment:
-      ASPNETCORE_URLS: "http://+:5000"
+      ASPNETCORE_URLS: "http://+:5001"
       DOTNET_ENVIRONMENT: "Production"
 
       # SQLite 数据库（持久化到 ./docker-data）
@@ -21,8 +21,8 @@ services:
       # 后台登录凭据文件（持久化到 ./docker-data/admin_auth.json）
       AdminAuth__CredentialsPath: "/data/admin_auth.json"
 
-      # 说明：这些“易变开关”建议通过面板「系统设置」保存到 /data/appsettings.local.json 来配置，
-      # 不要直接改 docker-compose.yml（否则 git pull 更新时容易冲突）。
+      # 说明：这些"易变开关"建议通过面板「系统设置」保存到 /data/appsettings.local.json 来配置，
+      # 不要直接改 docker-compose.yml（否则 git pull 更新时容易冲突��。
       # 注意：如果在这里设置了对应环境变量，会覆盖 /data/appsettings.local.json 的面板配置。
 
       # ========== Webhook 模式配置 ==========
